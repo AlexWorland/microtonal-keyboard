@@ -4,6 +4,7 @@
 
 import { buildCells } from "./layout.js";
 import { createRenderer } from "./render.js";
+import { initAudio, setWaveform, setVolume, startVoice, stopVoice } from "./audio.js";
 
 const baseInput = document.getElementById("base");
 const preset220 = document.getElementById("preset220");
@@ -57,8 +58,60 @@ baseInput.addEventListener("change", recompute);
 preset220.addEventListener("click", () => { baseInput.value = "220"; recompute(); });
 preset440.addEventListener("click", () => { baseInput.value = "440"; recompute(); });
 
-// Waveform/volume affect audio only (Task 9). They do not change layout, so no
-// recompute() here — listeners are added in Task 9.
+// Waveform/volume affect audio only (no layout recompute).
+waveformSelect.addEventListener("change", () => setWaveform(waveformSelect.value));
+volumeInput.addEventListener("input", () => setVolume(volumeInput.value));
 
-// Initial paint.
+// Active voices keyed by pointerId so multi-touch (incl. two pointers on the same
+// hex) never leaks a voice. Each entry tracks the originating polygon for per-hex
+// "drag-off releases" behavior.
+const activeVoices = new Map(); // pointerId -> { handle, polygon }
+
+function hexFromEvent(event) {
+  const t = event.target;
+  return (t && t.tagName === "polygon") ? t : null;
+}
+
+function releasePointer(pointerId) {
+  const entry = activeVoices.get(pointerId);
+  if (!entry) return;
+  stopVoice(entry.handle);
+  activeVoices.delete(pointerId);
+}
+
+function pressHex(event) {
+  const hex = hexFromEvent(event);
+  if (!hex) return;
+  initAudio(); // construct + resume the context inside the user gesture
+  const freq = Number(hex.dataset.freq); // full precision, not the label
+  const handle = startVoice(freq);
+  if (!handle) return;
+  // Capture so we keep receiving move/up for this pointer even off the polygon.
+  try { hex.setPointerCapture(event.pointerId); } catch (_) { /* ignore */ }
+  activeVoices.set(event.pointerId, { handle, polygon: hex });
+}
+
+// Per-hex "leave releases": if the pointer has dragged off its originating polygon,
+// release that voice. document.elementFromPoint sees through pointer capture.
+function moveHex(event) {
+  const entry = activeVoices.get(event.pointerId);
+  if (!entry) return;
+  const under = document.elementFromPoint(event.clientX, event.clientY);
+  if (under !== entry.polygon) {
+    releasePointer(event.pointerId);
+  }
+}
+
+function upHex(event) {
+  releasePointer(event.pointerId);
+}
+
+svgEl.addEventListener("pointerdown", pressHex);
+svgEl.addEventListener("pointermove", moveHex);
+svgEl.addEventListener("pointerup", upHex);
+svgEl.addEventListener("pointercancel", upHex);
+
+// Apply the initial audio settings (read current control values) and paint.
+setWaveform(waveformSelect.value);
+setVolume(volumeInput.value);
 recompute();
