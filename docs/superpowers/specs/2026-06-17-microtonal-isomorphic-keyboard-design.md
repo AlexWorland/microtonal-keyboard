@@ -76,13 +76,22 @@ y ∝ −(u + v)     // higher pitch drawn higher on screen
 
 Hex polygons are packed at these positions (pointy-top or flat-top; see Rendering).
 
-**Pitch window (grid extent).** The origin cell `(0, 0)` is the base frequency.
-Render every cell `(u, v)` whose `step` lies in `[0, 2N]` (two octaves above
-base, inclusive of the two-octave note). Because the lattice is isomorphic, the
-**same pitch appears at multiple `(u, v)` positions — these duplicates are kept
-intentionally**; the repetition is the defining visual feature of an isomorphic
-keyboard. Enumeration bounds `u` and `v` over a generous integer range, then
-filters by the pitch window, producing the diagonal band shape.
+**Pitch window (grid extent).** The origin cell `(0, 0)` is the base frequency
+(the origin/tonic is identified by `u===0 && v===0`, **not** by `step===0`, since
+step 0 recurs at duplicates). Render cells whose `step` lies in `[0, 2N]` (two
+octaves above base, inclusive of the two-octave note). Because the lattice is
+isomorphic, the **same pitch appears at multiple `(u, v)` positions — these
+duplicates are kept intentionally**; the repetition is the defining visual
+feature of an isomorphic keyboard.
+
+> **Note (refined during planning):** the band is *mathematically infinite*. The
+> map `(u,v) → step` has a kernel along `(fourth, −g)`, so infinitely many
+> `(u, v)` keep `step` in `[0, 2N]`. The renderer therefore enumerates a
+> **deliberate finite display window** bounded by a fixed column count (the
+> horizontal screen axis `u − v`); for each column the full in-window `v`-range
+> is enumerated, so the window is *complete per column*. Widening the column
+> budget only adds more columns of the (infinite) band — it is a display budget,
+> not a completeness bound.
 
 ### Worked examples (sanity values for tests)
 
@@ -95,17 +104,41 @@ filters by the pitch window, producing the diagonal band shape.
 | 5  | 3  | 2      | 1    | Pentatonic-ish |
 | 7  | 4  | 3      | 1    | — |
 
-## Edge case: small-N degeneracy
+## Edge case: when the lattice cannot reach all N notes
 
-`tone = 2g − N ≤ 0` makes the Wicki horizontal axis collapse (right neighbor
-duplicates the origin pitch). Checked across the full supported range 2–24:
-this occurs **only at N=2 and N=4** (both give `tone = 0`); no N in range
-produces a negative tone.
+> **Correction (2026-06-17, found during planning by adversarial review):** the
+> original draft of this section claimed the fallback was needed *only* at N=2
+> and N=4. That was wrong — it considered only the whole-tone collapse and
+> missed the coprimality requirement below.
 
-**Rule:** when `tone ≤ 0`, fall back to a **single-row uniform layout** — keys in
-a straight row where the right neighbor is `+1` EDO step, rendering steps
-`0…2N`. The app remains functional and correct at every N in 2–24. This is the
-only conditional branch in the layout logic.
+Two distinct conditions break the lattice:
+
+1. **Whole-tone collapse:** `tone = 2g − N ≤ 0` makes the Wicki horizontal axis
+   collapse (right neighbor duplicates the origin pitch). In range 2–24 this is
+   only N=2 (`tone = 0`).
+
+2. **Pitch-class coverage (the load-bearing one):** the lattice reaches a step
+   `s = u·g + v·fourth`, and mod N that is `(u − v)·g (mod N)`. So the set of
+   **reachable pitch classes is exactly the multiples of `gcd(g, N)`** — only
+   `N / gcd(g, N)` of the N classes. When `gcd(g, N) > 1` the keyboard is
+   permanently missing notes (e.g. 24-TET would show only the 12 even steps;
+   15-TET only 5 of 15). A generator must be **coprime to N** to span the full
+   scale, and the *best* fifth often is not.
+
+**Verified fallback set** (union of both conditions across N=2…24):
+
+```
+N ∈ { 2, 4, 6, 10, 14, 15, 20, 21, 24 }
+```
+
+**Rule:** for any N in that set, fall back to a **single-row uniform layout** —
+keys in a straight row where the right neighbor is `+1` EDO step, rendering steps
+`0…2N`. This guarantees all N pitch classes are visible and playable. For all
+other N the Wicki-Hayden hex lattice is used. This is the only conditional
+branch in the layout logic. (Design alternative considered and rejected:
+nudging the generator to the nearest coprime step would preserve hexes for all N
+but detune the displayed "fifth" — we keep the true best fifth and accept a flat
+row for these N.)
 
 ## Components / modules
 
