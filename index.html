@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Microtonal Isomorphic Keyboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="controls" id="controls">
+    <div class="control">
+      <label for="base">Base (Hz)</label>
+      <input type="number" id="base" min="20" max="4000" step="1" value="440" />
+      <div class="presets">
+        <button type="button" id="preset220">220</button>
+        <button type="button" id="preset440">440</button>
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="n">N divisions</label>
+      <input type="range" id="n" min="2" max="24" step="1" value="12" />
+      <input type="number" id="nNumber" min="2" max="24" step="1" value="12" />
+    </div>
+
+    <div class="control">
+      <label for="waveform">Waveform</label>
+      <select id="waveform">
+        <option value="sine">sine</option>
+        <option value="triangle">triangle</option>
+        <option value="square">square</option>
+        <option value="saw">saw</option>
+      </select>
+    </div>
+
+    <div class="control">
+      <label for="volume">Volume</label>
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.3" />
+    </div>
+  </header>
+
+  <main class="stage">
+    <svg id="keyboard" class="keyboard" xmlns="http://www.w3.org/2000/svg"></svg>
+  </main>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
