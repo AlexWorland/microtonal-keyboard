@@ -28,3 +28,14 @@ export function gcd(a, b) {
   }
   return a;
 }
+
+// Pitch in Hz for an integer step in N-TET. step may be any integer (incl. negative).
+export function pitchFor(base, N, step) {
+  return base * Math.pow(2, step / N);
+}
+
+// Pitch class = step mod N. Double-mod is mandatory: plain `%` is sign-preserving
+// in JS (-1 % 12 === -1), and layout enumerates negative steps before clipping.
+export function pitchClass(step, N) {
+  return ((step % N) + N) % N;
+}
