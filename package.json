@@ -1,0 +1,10 @@
+{
+  "name": "microtonal-keyboard",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Microtonal isomorphic (Wicki-Hayden) hex keyboard for N-TET.",
+  "scripts": {
+    "test": "node --test"
+  }
+}
