@@ -108,3 +108,49 @@ body {
   user-select: none;
   font-weight: 600;
 }
+
+/* ---- Piano view ---- */
+.pkey {
+  cursor: pointer;
+  transition: filter 0.05s linear;
+}
+
+.pkey--white {
+  fill: #f4f4f0;
+  stroke: #6a6a72;
+  stroke-width: 0.4;
+}
+
+.pkey--black {
+  fill: #1c1c22;
+  stroke: #000;
+  stroke-width: 0.4;
+}
+
+.pkey:hover {
+  filter: brightness(1.12);
+}
+
+.pkey--white:active,
+.pkey--black:active {
+  filter: brightness(1.3);
+}
+
+/* Octave repeats of the base note (pitch class 0). */
+.pkey--tonic {
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+/* The base/origin key (step 0). */
+.pkey--origin {
+  fill: #fff6d6;
+  stroke: #e6b800;
+  stroke-width: 1.6;
+}
+
+.pkey-label {
+  user-select: none;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}

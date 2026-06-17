@@ -2,8 +2,8 @@
 // DOM glue: reads control state, recomputes layout, repaints SVG, and (Task 9)
 // wires pointer events to the audio engine.
 
-import { buildCells } from "./layout.js";
-import { createRenderer } from "./render.js";
+import { pianoKeys } from "./piano.js";
+import { createPianoRenderer } from "./pianoRender.js";
 import { initAudio, setWaveform, setVolume, startVoice, stopVoice } from "./audio.js";
 
 const baseInput = document.getElementById("base");
@@ -15,7 +15,7 @@ const waveformSelect = document.getElementById("waveform");
 const volumeInput = document.getElementById("volume");
 const svgEl = document.getElementById("keyboard");
 
-const renderer = createRenderer(svgEl);
+const renderer = createPianoRenderer(svgEl);
 
 function clampN(value) {
   let n = Math.round(Number(value));
@@ -36,8 +36,8 @@ function readState() {
 
 function recompute() {
   const { base, N } = readState();
-  const cells = buildCells(base, N);
-  renderer.render(cells, N);
+  const layout = pianoKeys(base, N);
+  renderer.render(layout, N);
 }
 
 // Keep the N slider and number box in sync, clamped to 2..24.
@@ -63,13 +63,15 @@ waveformSelect.addEventListener("change", () => setWaveform(waveformSelect.value
 volumeInput.addEventListener("input", () => setVolume(volumeInput.value));
 
 // Active voices keyed by pointerId so multi-touch (incl. two pointers on the same
-// hex) never leaks a voice. Each entry tracks the originating polygon for per-hex
-// "drag-off releases" behavior.
-const activeVoices = new Map(); // pointerId -> { handle, polygon }
+// key) never leaks a voice. Each entry tracks the originating key element for
+// per-key "drag-off releases" behavior.
+const activeVoices = new Map(); // pointerId -> { handle, key }
 
-function hexFromEvent(event) {
+// A key is any rendered element carrying data-freq (rect for piano, polygon for
+// the legacy hex view). Labels set pointer-events:none so they never match.
+function keyFromEvent(event) {
   const t = event.target;
-  return (t && t.tagName === "polygon") ? t : null;
+  return (t && t.dataset && t.dataset.freq != null) ? t : null;
 }
 
 function releasePointer(pointerId) {
@@ -79,37 +81,37 @@ function releasePointer(pointerId) {
   activeVoices.delete(pointerId);
 }
 
-function pressHex(event) {
-  const hex = hexFromEvent(event);
-  if (!hex) return;
+function pressKey(event) {
+  const key = keyFromEvent(event);
+  if (!key) return;
   initAudio(); // construct + resume the context inside the user gesture
-  const freq = Number(hex.dataset.freq); // full precision, not the label
+  const freq = Number(key.dataset.freq); // full precision, not the label
   const handle = startVoice(freq);
   if (!handle) return;
-  // Capture so we keep receiving move/up for this pointer even off the polygon.
-  try { hex.setPointerCapture(event.pointerId); } catch (_) { /* ignore */ }
-  activeVoices.set(event.pointerId, { handle, polygon: hex });
+  // Capture so we keep receiving move/up for this pointer even off the key.
+  try { key.setPointerCapture(event.pointerId); } catch (_) { /* ignore */ }
+  activeVoices.set(event.pointerId, { handle, key });
 }
 
-// Per-hex "leave releases": if the pointer has dragged off its originating polygon,
+// Per-key "leave releases": if the pointer has dragged off its originating key,
 // release that voice. document.elementFromPoint sees through pointer capture.
-function moveHex(event) {
+function moveKey(event) {
   const entry = activeVoices.get(event.pointerId);
   if (!entry) return;
   const under = document.elementFromPoint(event.clientX, event.clientY);
-  if (under !== entry.polygon) {
+  if (under !== entry.key) {
     releasePointer(event.pointerId);
   }
 }
 
-function upHex(event) {
+function upKey(event) {
   releasePointer(event.pointerId);
 }
 
-svgEl.addEventListener("pointerdown", pressHex);
-svgEl.addEventListener("pointermove", moveHex);
-svgEl.addEventListener("pointerup", upHex);
-svgEl.addEventListener("pointercancel", upHex);
+svgEl.addEventListener("pointerdown", pressKey);
+svgEl.addEventListener("pointermove", moveKey);
+svgEl.addEventListener("pointerup", upKey);
+svgEl.addEventListener("pointercancel", upKey);
 
 // Apply the initial audio settings (read current control values) and paint.
 setWaveform(waveformSelect.value);

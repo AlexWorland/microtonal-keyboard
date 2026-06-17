@@ -1,8 +1,21 @@
-# Microtonal Isomorphic Keyboard
+# Microtonal Piano Keyboard
 
-A generalized Wicki-Hayden hexagonal keyboard for N-tone equal temperament (N-TET),
-N in 2..24. Pure vanilla JS (ES modules) + SVG + Web Audio. No build step, no
-runtime dependencies.
+A two-octave **piano keyboard** for N-tone equal temperament (N-TET), N in 2..24.
+Pure vanilla JS (ES modules) + SVG + Web Audio. No build step, no runtime
+dependencies.
+
+The keyboard lays out every step `0..2N` left-to-right in pitch order. White vs
+raised-black keys follow the **fifth-generated diatonic** (a MOS): at N=12 the
+white keys are exactly C D E F G A B — a normal piano — and the pattern
+generalizes to other N. When 7 distinct fifth-generated naturals don't exist
+(small or coprime-poor N), the keyboard falls back to a uniform all-white row so
+every note is still present. The base note is highlighted gold; octave repeats
+(pitch class 0) are outlined in blue.
+
+> An earlier **isomorphic Wicki-Hayden hex** view also lives in this repo
+> (`src/layout.js` + `src/render.js`, with `test/layout.test.js`). It's set aside,
+> not wired into `index.html`; the piano view (`src/piano.js` + `src/pianoRender.js`)
+> is the active layout.
 
 ## Run
 
