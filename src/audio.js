@@ -94,3 +94,9 @@ export function stopVoice(handle) {
     voices.delete(handle);
   };
 }
+
+// Panic: stop every currently-sounding voice, including any that leaked from a
+// missed pointer release. Backs the "Stop all" button.
+export function stopAllVoices() {
+  for (const handle of [...voices]) stopVoice(handle);
+}

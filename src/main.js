@@ -4,7 +4,7 @@
 
 import { pianoKeys } from "./piano.js";
 import { createPianoRenderer } from "./pianoRender.js";
-import { initAudio, setWaveform, setVolume, startVoice, stopVoice } from "./audio.js";
+import { initAudio, setWaveform, setVolume, startVoice, stopVoice, stopAllVoices } from "./audio.js";
 
 const baseInput = document.getElementById("base");
 const preset220 = document.getElementById("preset220");
@@ -13,6 +13,7 @@ const nRange = document.getElementById("n");
 const nNumber = document.getElementById("nNumber");
 const waveformSelect = document.getElementById("waveform");
 const volumeInput = document.getElementById("volume");
+const stopAllBtn = document.getElementById("stopAll");
 const svgEl = document.getElementById("keyboard");
 
 const renderer = createPianoRenderer(svgEl);
@@ -35,6 +36,9 @@ function readState() {
 }
 
 function recompute() {
+  // Retuning replaces every key element, so stop anything sounding first —
+  // otherwise latched/held notes from the old tuning ring on with no visible key.
+  stopAll();
   const { base, N } = readState();
   const layout = pianoKeys(base, N);
   renderer.render(layout, N);
@@ -66,6 +70,10 @@ volumeInput.addEventListener("input", () => setVolume(volumeInput.value));
 // key) never leaks a voice. Each entry tracks the originating key element for
 // per-key "drag-off releases" behavior.
 const activeVoices = new Map(); // pointerId -> { handle, key }
+
+// Double-click-latched (held) notes, keyed by the key's data-step. Independent of
+// pointer voices — they sustain until double-clicked again or "Stop all".
+const latched = new Map(); // step (string) -> voice handle
 
 // A key is any rendered element carrying data-freq (rect for piano, polygon for
 // the legacy hex view). Labels set pointer-events:none so they never match.
@@ -113,6 +121,10 @@ function pressKey(event) {
   const key = keyFromEvent(event);
   if (!key) return;
   initAudio(); // construct + resume the context inside the user gesture
+  // Defensive: if a prior gesture for this pointerId never released (e.g. the
+  // button came up outside the window), clear it first so we never orphan a
+  // voice that can no longer be stopped via bookkeeping.
+  if (activeVoices.has(event.pointerId)) releasePointer(event.pointerId);
   // Capture so we keep receiving move/up for this pointer even off the key.
   try { key.setPointerCapture(event.pointerId); } catch (_) { /* ignore */ }
   const entry = { handle: null, key: null };
@@ -136,10 +148,50 @@ function upKey(event) {
   releasePointer(event.pointerId);
 }
 
+// Double-click a key to latch it (sustain indefinitely); double-click again to
+// release it. Latched notes are independent of press/drag voices.
+function toggleLatch(event) {
+  const key = keyFromEvent(event);
+  if (!key) return;
+  initAudio();
+  const id = key.dataset.step;
+  if (latched.has(id)) {
+    stopVoice(latched.get(id));
+    latched.delete(id);
+    key.classList.remove("pkey--latched");
+  } else {
+    const handle = startVoice(Number(key.dataset.freq));
+    if (handle) {
+      latched.set(id, handle);
+      key.classList.add("pkey--latched");
+    }
+  }
+}
+
+// Panic: stop every sounding note — pointer voices, latched notes, and (via the
+// audio-level panic) any voice that leaked from a missed release.
+function stopAll() {
+  for (const id of [...activeVoices.keys()]) releasePointer(id);
+  for (const handle of latched.values()) stopVoice(handle);
+  latched.clear();
+  document
+    .querySelectorAll(".pkey--playing, .pkey--latched")
+    .forEach((e) => e.classList.remove("pkey--playing", "pkey--latched"));
+  stopAllVoices(); // backstop: kill anything still ringing in the audio graph
+}
+
 svgEl.addEventListener("pointerdown", pressKey);
 svgEl.addEventListener("pointermove", moveKey);
-svgEl.addEventListener("pointerup", upKey);
-svgEl.addEventListener("pointercancel", upKey);
+svgEl.addEventListener("dblclick", toggleLatch);
+
+// Release on the WINDOW, not just the SVG: a glissando whose button-up lands
+// outside the keyboard (or outside the window, which fires lostpointercapture
+// instead of pointerup) must still stop the note. This is the stuck-note fix.
+window.addEventListener("pointerup", upKey);
+window.addEventListener("pointercancel", upKey);
+window.addEventListener("lostpointercapture", upKey);
+
+stopAllBtn.addEventListener("click", stopAll);
 
 // Apply the initial audio settings (read current control values) and paint.
 setWaveform(waveformSelect.value);
