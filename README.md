@@ -1,5 +1,8 @@
 # Microtonal Piano Keyboard
 
+[![Test](https://github.com/AlexWorland/microtonal-keyboard/actions/workflows/test.yml/badge.svg)](https://github.com/AlexWorland/microtonal-keyboard/actions/workflows/test.yml)
+[![Build](https://github.com/AlexWorland/microtonal-keyboard/actions/workflows/build.yml/badge.svg)](https://github.com/AlexWorland/microtonal-keyboard/actions/workflows/build.yml)
+
 A two-octave **piano keyboard** for N-tone equal temperament (N-TET), N in 2..24.
 Pure vanilla JS (ES modules) + SVG + Web Audio. No build step, no runtime
 dependencies.
@@ -91,6 +94,11 @@ docker compose up -d --build
 docker compose down            # stop
 ```
 
+- Prebuilt image (published by CI on every push to `main`):
+
+  ```bash
+  docker run -p 8080:80 ghcr.io/alexworland/microtonal-keyboard:latest
+  ```
 - Image: ~76 MB (`nginx:1.27-alpine` + the app). Config in `Dockerfile`,
   `docker/nginx.conf`, `docker-compose.yml`. Change the host port via the `ports`
   mapping (`8080:80`).
