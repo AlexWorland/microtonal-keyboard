@@ -74,10 +74,38 @@ function keyFromEvent(event) {
   return (t && t.dataset && t.dataset.freq != null) ? t : null;
 }
 
+// The key element under a set of viewport coordinates, or null. elementFromPoint
+// sees through pointer capture, so it reports the key actually under the pointer
+// mid-drag (not the captured originating key).
+function keyUnder(clientX, clientY) {
+  const under = document.elementFromPoint(clientX, clientY);
+  return (under && under.dataset && under.dataset.freq != null) ? under : null;
+}
+
+// Stop this pointer's current note (if any) and clear its visual highlight.
+function stopCurrent(entry) {
+  if (entry.handle) {
+    stopVoice(entry.handle);
+    entry.handle = null;
+  }
+  if (entry.key) {
+    entry.key.classList.remove("pkey--playing");
+    entry.key = null;
+  }
+}
+
+// Sound a key for this pointer and highlight it.
+function startOn(entry, key) {
+  const handle = startVoice(Number(key.dataset.freq)); // full precision, not the label
+  entry.handle = handle;
+  entry.key = key;
+  if (handle) key.classList.add("pkey--playing");
+}
+
 function releasePointer(pointerId) {
   const entry = activeVoices.get(pointerId);
   if (!entry) return;
-  stopVoice(entry.handle);
+  stopCurrent(entry);
   activeVoices.delete(pointerId);
 }
 
@@ -85,23 +113,23 @@ function pressKey(event) {
   const key = keyFromEvent(event);
   if (!key) return;
   initAudio(); // construct + resume the context inside the user gesture
-  const freq = Number(key.dataset.freq); // full precision, not the label
-  const handle = startVoice(freq);
-  if (!handle) return;
   // Capture so we keep receiving move/up for this pointer even off the key.
   try { key.setPointerCapture(event.pointerId); } catch (_) { /* ignore */ }
-  activeVoices.set(event.pointerId, { handle, key });
+  const entry = { handle: null, key: null };
+  activeVoices.set(event.pointerId, entry);
+  startOn(entry, key);
 }
 
-// Per-key "leave releases": if the pointer has dragged off its originating key,
-// release that voice. document.elementFromPoint sees through pointer capture.
+// Glissando: while the button is held, dragging onto a new key stops the previous
+// note and sounds the new one (one note at a time). Dragging into an empty gap
+// silences until a key is entered again.
 function moveKey(event) {
   const entry = activeVoices.get(event.pointerId);
-  if (!entry) return;
-  const under = document.elementFromPoint(event.clientX, event.clientY);
-  if (under !== entry.key) {
-    releasePointer(event.pointerId);
-  }
+  if (!entry) return; // button not down for this pointer
+  const key = keyUnder(event.clientX, event.clientY);
+  if (key === entry.key) return; // still on the same key (or still in a gap)
+  stopCurrent(entry);
+  if (key) startOn(entry, key);
 }
 
 function upKey(event) {

@@ -131,6 +131,11 @@ body {
   filter: brightness(1.12);
 }
 
+/* Follows the pointer during a click or glissando drag. */
+.pkey--playing {
+  filter: brightness(1.4);
+}
+
 .pkey--white:active,
 .pkey--black:active {
   filter: brightness(1.3);
