@@ -42,18 +42,49 @@ Any change recomputes the tuning and re-renders the keyboard live.
 
 ## Layout notes
 
-The keyboard is the Wicki-Hayden isomorphic lattice. The rendered band is a finite
-display window (bounded by a fixed column count); the underlying lattice repeats
-infinitely along its diagonal, so duplicate pitches recur by design. For N where the
-best fifth is not coprime with N (and the two degenerate N where the whole tone
-collapses) the lattice cannot reach every pitch class, so those N fall back to a
-single uniform row so all N pitch classes remain playable. The per-hex label shows
-frequency (Hz, 1 decimal) over the pitch class (step mod N, 0..N-1).
+Every step `0..2N` is drawn as a key in pitch order, so no note is ever missing.
+White vs raised-black keys come from the fifth-generated diatonic: the white set is
+`{ (j * bestFifth(N)) mod N : j = -1..5 }`, which at N=12 is exactly `{0,2,4,5,7,9,11}`
+(C D E F G A B). When those 7 naturals are not distinct (small or coprime-poor N) the
+keyboard falls back to a uniform all-white row. Black keys are grouped over the white
+boundary they fall between and shrink so a crowded gap (high N) never overflows. Each
+key label shows frequency (Hz, 1 decimal) over the pitch class (step mod N, 0..N-1).
+
+## Desktop app (Electron)
+
+The app is also packaged as a desktop app. The renderer is the same unbundled web
+app; `electron-main.cjs` serves it over a custom `app://` scheme (Chromium blocks ES
+module imports over `file://`), so there is still no bundler for the app code.
+
+```bash
+npm install          # installs electron + electron-builder (devDependencies only)
+npm start            # run the app locally in Electron
+npm run dist         # build distributables into dist/
+```
+
+`npm run dist` produces (config in the `build` field of `package.json`):
+
+| File | For |
+|------|-----|
+| `Microtonal Keyboard-<v>-arm64.dmg` | Apple Silicon Macs |
+| `Microtonal Keyboard-<v>.dmg`       | Intel (x64) Macs |
+| `Microtonal Keyboard-<v>-win.zip`   | Windows x64 (unzip, run the `.exe`) |
+
+The builds are **unsigned**. First launch:
+
+- **macOS** — Gatekeeper will refuse a double-click. Right-click the app → **Open** →
+  **Open**, once. (Or `xattr -dr com.apple.quarantine "/Applications/Microtonal Keyboard.app"`.)
+- **Windows** — SmartScreen shows a warning: **More info** → **Run anyway**.
+
+The Windows artifact is a portable zip (no installer) because building a signed NSIS
+installer needs `wine`/Windows tooling not available on this Mac; build that on a
+Windows machine or CI if you need it.
 
 ## Test
 
-Pure logic modules (`src/tuning.js`, `src/layout.js`) have unit tests using the
-built-in Node test runner (Node 20+; developed on Node 26). No dependencies.
+Pure logic modules (`src/tuning.js`, `src/piano.js`, `src/layout.js`) have unit tests
+using the built-in Node test runner (Node 20+; developed on Node 26). No runtime
+dependencies.
 
 ```bash
 node --test

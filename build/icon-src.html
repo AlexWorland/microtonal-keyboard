@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  html, body { margin: 0; padding: 0; background: transparent; }
+  #icon { display: block; }
+</style>
+</head>
+<body>
+<svg id="icon" width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b303c"/>
+      <stop offset="1" stop-color="#15171d"/>
+    </linearGradient>
+    <linearGradient id="white" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8e8ea"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9a8"/>
+      <stop offset="1" stop-color="#f0c24a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded app background -->
+  <rect x="0" y="0" width="1024" height="1024" rx="208" fill="url(#bg)"/>
+
+  <!-- sine wave evoking pitch / microtonal divisions -->
+  <path d="M 150 300 C 240 170, 330 170, 420 300 S 600 430, 690 300 S 870 170, 884 300"
+        fill="none" stroke="#66aadd" stroke-width="22" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- white keys -->
+  <g stroke="#9a9aa2" stroke-width="3">
+    <rect x="196" y="404" width="124" height="392" rx="14" fill="url(#gold)" stroke="#e6b800"/>
+    <rect x="324" y="404" width="124" height="392" rx="14" fill="url(#white)"/>
+    <rect x="452" y="404" width="124" height="392" rx="14" fill="url(#white)"/>
+    <rect x="580" y="404" width="124" height="392" rx="14" fill="url(#white)"/>
+    <rect x="708" y="404" width="124" height="392" rx="14" fill="url(#white)"/>
+  </g>
+
+  <!-- raised black keys -->
+  <g fill="#1b1b20" stroke="#000" stroke-width="3">
+    <rect x="286" y="404" width="76" height="240" rx="10"/>
+    <rect x="414" y="404" width="76" height="240" rx="10"/>
+    <rect x="670" y="404" width="76" height="240" rx="10"/>
+  </g>
+</svg>
+</body>
+</html>

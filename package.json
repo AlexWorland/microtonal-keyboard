@@ -3,8 +3,56 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "description": "Microtonal isomorphic (Wicki-Hayden) hex keyboard for N-TET.",
+  "description": "Microtonal piano keyboard for N-TET (with a set-aside isomorphic hex view).",
+  "main": "electron-main.cjs",
+  "author": "Alex Worland",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "start": "electron .",
+    "smoke": "SMOKE_TEST=1 electron .",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist": "electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "com.aworland.microtonalkeyboard",
+    "productName": "Microtonal Keyboard",
+    "publish": null,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "src/**/*",
+      "electron-main.cjs"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3"
   }
 }
