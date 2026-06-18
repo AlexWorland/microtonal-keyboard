@@ -105,7 +105,9 @@ jobs:
           merge-multiple: true
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        # Pinned to an immutable commit SHA (supply-chain hardening); this is the
+        # commit the v2 tag pointed to. Bump deliberately (Dependabot can manage).
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: artifacts/**
           generate_release_notes: true
