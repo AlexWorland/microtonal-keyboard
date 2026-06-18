@@ -1,0 +1,14 @@
+# Keep the build context tiny — only the web app is COPYed in the Dockerfile.
+node_modules
+dist
+.git
+.gitignore
+docs
+build
+test
+electron-main.cjs
+*.md
+.DS_Store
+.playwright-mcp
+.idea
+.vscode

@@ -80,6 +80,31 @@ The Windows artifact is a portable zip (no installer) because building a signed 
 installer needs `wine`/Windows tooling not available on this Mac; build that on a
 Windows machine or CI if you need it.
 
+## Host it (Docker)
+
+The web app is static files served over HTTP, so it hosts behind nginx with no
+runtime. Run it locally or on any server with Docker:
+
+```bash
+docker compose up -d --build
+# open http://localhost:8080/   (health: http://localhost:8080/healthz)
+docker compose down            # stop
+```
+
+- Image: ~76 MB (`nginx:1.27-alpine` + the app). Config in `Dockerfile`,
+  `docker/nginx.conf`, `docker-compose.yml`. Change the host port via the `ports`
+  mapping (`8080:80`).
+- **Deploying to an x86-64 server from an Apple Silicon Mac?** The local build is
+  arm64. Build a matching image with buildx:
+
+  ```bash
+  docker buildx build --platform linux/amd64 -t microtonal-keyboard:amd64 .
+  ```
+
+  Or just `docker compose up -d --build` directly on the server.
+- Put it behind a TLS reverse proxy (Caddy, Traefik, nginx, Cloudflare Tunnel) for
+  a public deployment — the container speaks plain HTTP on port 80.
+
 ## Test
 
 Pure logic modules (`src/tuning.js`, `src/piano.js`, `src/layout.js`) have unit tests
