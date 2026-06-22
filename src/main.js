@@ -15,6 +15,9 @@ const waveformSelect = document.getElementById("waveform");
 const volumeInput = document.getElementById("volume");
 const stopAllBtn = document.getElementById("stopAll");
 const svgEl = document.getElementById("keyboard");
+const fBaseEl = document.getElementById("fBase");
+const fNEl = document.getElementById("fN");
+const fMaxEl = document.getElementById("fMax");
 
 const renderer = createPianoRenderer(svgEl);
 
@@ -35,11 +38,19 @@ function readState() {
   };
 }
 
+// Live frequency-formula readout: f(k) = base * 2^(k/N), with the current values.
+function updateFormula(base, N) {
+  fBaseEl.textContent = String(base); // Number -> "440" or "432.5"
+  fNEl.textContent = String(N);
+  fMaxEl.textContent = String(2 * N);
+}
+
 function recompute() {
   // Retuning replaces every key element, so stop anything sounding first —
   // otherwise latched/held notes from the old tuning ring on with no visible key.
   stopAll();
   const { base, N } = readState();
+  updateFormula(base, N);
   const layout = pianoKeys(base, N);
   renderer.render(layout, N);
 }

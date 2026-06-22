@@ -43,6 +43,14 @@
       <label>Panic</label>
       <button type="button" id="stopAll" class="stop-all">Stop all</button>
     </div>
+
+    <div class="control formula">
+      <label>Frequency formula</label>
+      <div class="formula-eq">
+        <i>f</i>(<i>k</i>) = <span id="fBase">440</span> &middot; 2<sup>(<i>k</i> / <span id="fN">12</span>)</sup> Hz
+      </div>
+      <div class="formula-note"><i>k</i> = steps above base, 0&ndash;<span id="fMax">24</span></div>
+    </div>
   </header>
 
   <main class="stage">

@@ -43,6 +43,28 @@ body {
   opacity: 0.7;
 }
 
+/* Frequency formula readout — pushed to the right edge of the header. */
+.control.formula {
+  margin-left: auto;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.formula-eq {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.95rem;
+  color: var(--accent);
+}
+
+.formula-eq sup {
+  font-size: 0.7em;
+}
+
+.formula-note {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
 .control input,
 .control select {
   background: #11131a;
